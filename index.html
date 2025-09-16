@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earnings Calculator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-area:hover {
+            border-color: #667eea;
+            background-color: #f8f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #667eea;
+            background-color: #f0f4ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #ddd;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #666;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .result.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .filters {
+            background: #f8f9ff;
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .date-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .date-inputs input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .date-inputs input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .percentage-input {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .percentage-input input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .percentage-input input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .percentage-input span {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .result-card.primary {
+            background: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .result-card.secondary {
+            background: #e7f3ff;
+            border-color: #bde0ff;
+        }
+
+        .result-card.accent {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .result-label {
+            font-size: 14px;
+            color: #64748b;
+            font-weight: 500;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .info-icon {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background-color: #667eea;
+            color: white;
+            font-size: 10px;
+            line-height: 14px;
+            text-align: center;
+            cursor: help;
+            position: relative;
+        }
+
+        .info-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .info-tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #333 transparent transparent transparent;
+        }
+
+        .info-icon:hover .info-tooltip {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Earnings Calculator</h1>
+            <p>Upload your CSV file to calculate total net earnings<br>
+            <small style="color: #888;">✨ Calculations done entirely in your browser - no data sent to servers!</small></p>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">
+                <strong>Click to upload</strong> or drag and drop your CSV file here
+            </div>
+            <small style="color: #999;">CSV files only</small>
+            <input type="file" class="file-input" id="fileInput" accept=".csv">
+        </div>
+
+        <div class="file-info" id="fileInfo" style="display: none;"></div>
+
+        <div class="filters" id="filters">
+            <div class="filter-group">
+                <label>📅 Date Range Filter</label>
+                <div class="date-inputs">
+                    <input type="date" id="startDate" placeholder="Start Date">
+                    <input type="date" id="endDate" placeholder="End Date">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label>💰 Chatter's Cut</label>
+                <div class="percentage-input">
+                    <input type="number" id="chatterCut" value="35" min="0" max="100" step="0.1">
+                    <span>%</span>
+                </div>
+            </div>
+
+            <small style="color: #666; display: block; margin-top: 8px;">
+                💡 Leave dates blank to include all transactions. Dates converted from UTC to UK time (GMT/BST).
+            </small>
+        </div>
+
+        <button class="btn" id="calculateBtn" disabled>Calculate Net Earnings</button>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Processing your file...</div>
+        </div>
+
+        <div class="result" id="result" style="display: none;"></div>
+
+        <div class="results-grid" id="resultsGrid" style="display: none;">
+            <div class="result-card primary">
+                <div class="result-value" id="totalEarnings">$0.00</div>
+                <div class="result-label">
+                    💰 Total Net Earnings
+                    <span class="info-icon">
+                        i
+                        <div class="info-tooltip">Excludes referral income</div>
+                    </span>
+                </div>
+            </div>
+
+            <div class="result-card secondary">
+                <div class="result-value" id="chattersCutAmount">$0.00</div>
+                <div class="result-label" id="chattersCutLabel">📊 Chatter's Cut (35%)</div>
+            </div>
+
+            <div class="result-card accent">
+                <div class="result-value" id="referralIncome">$0.00</div>
+                <div class="result-label">🎯 Referral Income</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const fileInfo = document.getElementById('fileInfo');
+        const filters = document.getElementById('filters');
+        const resultsGrid = document.getElementById('resultsGrid');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const chatterCutInput = document.getElementById('chatterCut');
+
+        let selectedFile = null;
+
+        // Add input validation for chatter's cut
+        chatterCutInput.addEventListener('input', function() {
+            let value = parseFloat(this.value);
+
+            if (isNaN(value) || value < 0) {
+                this.value = 0;
+            } else if (value > 100) {
+                this.value = 100;
+            }
+
+            // Update result label in real-time if results are visible
+            if (resultsGrid.style.display === 'grid') {
+                const percentage = parseFloat(this.value) || 35;
+                document.getElementById('chattersCutLabel').textContent = `📊 Chatter's Cut (${percentage}%)`;
+            }
+        });
+
+        // Update chatter's cut amount when percentage changes
+        chatterCutInput.addEventListener('change', function() {
+            if (resultsGrid.style.display === 'grid') {
+                // Recalculate and update the chatter's cut amount
+                const totalEarnings = parseFloat(document.getElementById('totalEarnings').textContent.replace('$', ''));
+                const percentage = parseFloat(this.value) || 35;
+                const newAmount = totalEarnings * (percentage / 100);
+
+                document.getElementById('chattersCutAmount').textContent = `$${newAmount.toFixed(2)}`;
+                document.getElementById('chattersCutLabel').textContent = `📊 Chatter's Cut (${percentage}%)`;
+            }
+        });
+
+        // Upload area click handler
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // Calculate button handler
+        calculateBtn.addEventListener('click', calculateEarnings);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            handleFile(file);
+        }
+
+        function handleFile(file) {
+            if (!file) return;
+
+            if (!file.name.endsWith('.csv')) {
+                showResult('Please select a CSV file.', 'error');
+                return;
+            }
+
+            selectedFile = file;
+            fileInfo.style.display = 'block';
+            fileInfo.innerHTML = `
+                <strong>Selected file:</strong> ${file.name}<br>
+                <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB
+            `;
+            filters.style.display = 'block';
+            calculateBtn.disabled = false;
+            result.style.display = 'none';
+            resultsGrid.style.display = 'none';
+        }
+
+        // Simple CSV parser function
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            if (lines.length < 2) {
+                throw new Error('CSV must contain at least a header and one data row');
+            }
+
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            const rows = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue; // Skip empty lines
+
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let j = 0; j < lines[i].length; j++) {
+                    const char = lines[i][j];
+
+                    if (char === '"' && (j === 0 || lines[i][j-1] === ',')) {
+                        inQuotes = true;
+                    } else if (char === '"' && inQuotes && (j === lines[i].length - 1 || lines[i][j+1] === ',')) {
+                        inQuotes = false;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+
+                if (values.length === headers.length) {
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        row[header] = values[index];
+                    });
+                    rows.push(row);
+                }
+            }
+
+            return { headers, rows };
+        }
+
+        function parseDate(dateStr) {
+            // Parse UTC datetime and convert to UK timezone (London)
+            if (!dateStr) return null;
+
+            try {
+                // Handle different formats: "2025-09-16 12:45:27" or "2025-09-16"
+                const cleaned = dateStr.trim();
+                let utcDate;
+
+                if (cleaned.includes(' ')) {
+                    // Full datetime format: "2025-09-16 12:45:27"
+                    utcDate = new Date(cleaned + 'Z'); // Add Z to indicate UTC
+                } else {
+                    // Date only format: "2025-09-16"
+                    utcDate = new Date(cleaned + 'T00:00:00Z');
+                }
+
+                if (isNaN(utcDate.getTime())) return null;
+
+                // Convert to UK timezone (handles GMT/BST automatically)
+                const ukDate = new Date(utcDate.toLocaleString("en-US", {timeZone: "Europe/London"}));
+
+                // Return date only (without time) for comparison
+                return new Date(ukDate.getFullYear(), ukDate.getMonth(), ukDate.getDate());
+
+            } catch (error) {
+                console.warn('Error parsing date:', dateStr, error);
+                return null;
+            }
+        }
+
+        function isDateInRange(transactionDate, startDate, endDate) {
+            if (!transactionDate) return true; // Include if no date info
+
+            if (startDate && transactionDate < startDate) return false;
+            if (endDate && transactionDate > endDate) return false;
+
+            return true;
+        }
+
+        async function calculateEarnings() {
+            if (!selectedFile) return;
+
+            loading.style.display = 'block';
+            calculateBtn.disabled = true;
+            result.style.display = 'none';
+            resultsGrid.style.display = 'none';
+
+            try {
+                // Read file content
+                const text = await selectedFile.text();
+
+                // Parse CSV
+                const csvData = parseCSV(text);
+
+                // Check required columns
+                if (!csvData.headers.includes('Net')) {
+                    throw new Error('CSV must contain a "Net" column');
+                }
+
+                // Get date filter values
+                const startDate = startDateInput.value ? new Date(startDateInput.value + 'T00:00:00') : null;
+                const endDate = endDateInput.value ? new Date(endDateInput.value + 'T23:59:59') : null;
+
+                // Process transactions
+                let netSum = 0;
+                let referralSum = 0;
+                let validRecords = 0;
+                let referralRecords = 0;
+                let filteredOutByDate = 0;
+                let invalidRecords = [];
+
+                const hasDateColumn = csvData.headers.includes('Paid At (UTC)');
+                const hasTypeColumn = csvData.headers.includes('Type');
+
+                csvData.rows.forEach((row, index) => {
+                    const netValue = parseFloat(row.Net);
+
+                    // Skip invalid net values
+                    if (isNaN(netValue)) {
+                        invalidRecords.push(index + 2);
+                        return;
+                    }
+
+                    // Parse transaction date if available
+                    let transactionDate = null;
+                    if (hasDateColumn) {
+                        transactionDate = parseDate(row['Paid At (UTC)']);
+                    }
+
+                    // Apply date filter
+                    if (!isDateInRange(transactionDate, startDate, endDate)) {
+                        filteredOutByDate++;
+                        return;
+                    }
+
+                    // Check if it's a referral transaction
+                    const isReferral = hasTypeColumn && row.Type && row.Type.trim().toLowerCase() === 'referral';
+
+                    if (isReferral) {
+                        referralSum += netValue;
+                        referralRecords++;
+                    } else {
+                        netSum += netValue;
+                        validRecords++;
+                    }
+                });
+
+                // Get chatter's cut percentage
+                const chatterCutPercentage = parseFloat(chatterCutInput.value) || 35;
+                const chatterCutAmount = netSum * (chatterCutPercentage / 100);
+
+                // Update results display
+                document.getElementById('totalEarnings').textContent = `$${netSum.toFixed(2)}`;
+                document.getElementById('chattersCutAmount').textContent = `$${chatterCutAmount.toFixed(2)}`;
+                document.getElementById('chattersCutLabel').textContent = `📊 Chatter's Cut (${chatterCutPercentage}%)`;
+                document.getElementById('referralIncome').textContent = `$${referralSum.toFixed(2)}`;
+
+                // Show results grid
+                resultsGrid.style.display = 'grid';
+
+                // Hide the old result box
+                result.style.display = 'none';
+
+            } catch (error) {
+                console.error('Error processing CSV:', error);
+                showResult(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                loading.style.display = 'none';
+                calculateBtn.disabled = false;
+            }
+        }
+
+        function showResult(message, type) {
+            result.innerHTML = message;
+            result.className = `result ${type}`;
+            result.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
