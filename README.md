@@ -44,11 +44,6 @@ npx serve .
 ```
 earnings-calculator/
 ├── index.html              # Complete web application
-├── data/
-│   └── earnings.csv        # Example CSV file
-├── backend/                # Optional backend (not needed for client-side version)
-├── docs/                   # Documentation
-├── test_small.csv          # Test file
 └── README.md               # This file
 ```
 
@@ -58,10 +53,10 @@ Your CSV file must contain a **"Net"** column with numeric values. Optional colu
 
 ```csv
 Net,Tax,Fanvue Fee,Price,Gross,Invoice Number,Paid At (UTC),Type,Fan Handle
-3.24,0,0.81,4.05,4.05,FVE-20250916-17028,2025-09-16 12:45:27,Subscription,brian0796
-16.79,0,4.2,20.99,20.99,FVE-20250916-2525,2025-09-16 01:47:05,Message,ricardo89
-40.00,0,10,50,50,FVE-20250915-37892,2025-09-15 23:23:51,Tip,brees915
-5.50,0,1.5,7.00,7.00,FVE-20250916-12345,2025-09-16 14:30:00,Referral,jane_doe
+3.24,0,0.81,4.05,4.05,FVE-20250916-17028,2025-09-16 12:45:27,Subscription,user1
+16.79,0,4.2,20.99,20.99,FVE-20250916-2525,2025-09-16 01:47:05,Message,user2
+40.00,0,10,50,50,FVE-20250915-37892,2025-09-15 23:23:51,Tip,user3
+5.50,0,1.5,7.00,7.00,FVE-20250916-12345,2025-09-16 14:30:00,Referral,user4
 ```
 
 ### Column Details:
