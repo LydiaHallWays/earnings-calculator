@@ -375,11 +375,15 @@
         <div class="results-grid" id="resultsGrid" style="display: none;">
             <div class="result-card primary">
                 <div class="result-value" id="totalEarnings">$0.00</div>
+                <div class="currency-conversions" id="currencyConversions" style="font-size: 14px; color: #64748b; margin-top: 5px; display: none;">
+                    <div>≈ £<span id="gbpAmount">0.00</span> GBP</div>
+                    <div>≈ €<span id="eurAmount">0.00</span> EUR</div>
+                </div>
                 <div class="result-label">
                     💰 Total Net Earnings
                     <span class="info-icon">
                         i
-                        <div class="info-tooltip">Excludes referral income</div>
+                        <div class="info-tooltip">Excludes referral income and other income</div>
                     </span>
                 </div>
             </div>
@@ -392,6 +396,17 @@
             <div class="result-card accent">
                 <div class="result-value" id="referralIncome">$0.00</div>
                 <div class="result-label">🎯 Referral Income</div>
+            </div>
+
+            <div class="result-card" style="background: #f3e8ff; border-color: #d8b4fe;">
+                <div class="result-value" id="otherIncome">$0.00</div>
+                <div class="result-label">
+                    🔗 Other Income
+                    <span class="info-icon">
+                        i
+                        <div class="info-tooltip">Usually ambassador payments or paid media links</div>
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -410,6 +425,7 @@
         const chatterCutInput = document.getElementById('chatterCut');
 
         let selectedFile = null;
+        let exchangeRates = null;
 
         // Add input validation for chatter's cut
         chatterCutInput.addEventListener('input', function() {
@@ -438,6 +454,9 @@
 
                 document.getElementById('chattersCutAmount').textContent = `$${newAmount.toFixed(2)}`;
                 document.getElementById('chattersCutLabel').textContent = `📊 Chatter's Cut (${percentage}%)`;
+
+                // Update currency conversions with the current total earnings
+                updateCurrencyConversions(totalEarnings);
             }
         });
 
@@ -590,6 +609,11 @@
             resultsGrid.style.display = 'none';
 
             try {
+                // Fetch exchange rates if not already cached
+                if (!exchangeRates) {
+                    exchangeRates = await fetchExchangeRates();
+                }
+
                 // Read file content
                 const text = await selectedFile.text();
 
@@ -608,8 +632,10 @@
                 // Process transactions
                 let netSum = 0;
                 let referralSum = 0;
+                let otherSum = 0;
                 let validRecords = 0;
                 let referralRecords = 0;
+                let otherRecords = 0;
                 let filteredOutByDate = 0;
                 let invalidRecords = [];
 
@@ -637,12 +663,17 @@
                         return;
                     }
 
-                    // Check if it's a referral transaction
-                    const isReferral = hasTypeColumn && row.Type && row.Type.trim().toLowerCase() === 'referral';
+                    // Check transaction type
+                    const transactionType = hasTypeColumn && row.Type ? row.Type.trim().toLowerCase() : '';
+                    const isReferral = transactionType === 'referral';
+                    const isOther = transactionType === 'other';
 
                     if (isReferral) {
                         referralSum += netValue;
                         referralRecords++;
+                    } else if (isOther) {
+                        otherSum += netValue;
+                        otherRecords++;
                     } else {
                         netSum += netValue;
                         validRecords++;
@@ -658,6 +689,10 @@
                 document.getElementById('chattersCutAmount').textContent = `$${chatterCutAmount.toFixed(2)}`;
                 document.getElementById('chattersCutLabel').textContent = `📊 Chatter's Cut (${chatterCutPercentage}%)`;
                 document.getElementById('referralIncome').textContent = `$${referralSum.toFixed(2)}`;
+                document.getElementById('otherIncome').textContent = `$${otherSum.toFixed(2)}`;
+
+                // Update currency conversions
+                updateCurrencyConversions(netSum);
 
                 // Show results grid
                 resultsGrid.style.display = 'grid';
@@ -671,6 +706,35 @@
             } finally {
                 loading.style.display = 'none';
                 calculateBtn.disabled = false;
+            }
+        }
+
+        async function fetchExchangeRates() {
+            try {
+                const response = await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=GBP,EUR');
+                if (!response.ok) throw new Error('Failed to fetch exchange rates');
+                const data = await response.json();
+                return data.rates;
+            } catch (error) {
+                console.warn('Error fetching exchange rates:', error);
+                return null;
+            }
+        }
+
+        function updateCurrencyConversions(usdAmount) {
+            const conversionsDiv = document.getElementById('currencyConversions');
+            const gbpSpan = document.getElementById('gbpAmount');
+            const eurSpan = document.getElementById('eurAmount');
+
+            if (exchangeRates && usdAmount > 0) {
+                const gbpAmount = (usdAmount * exchangeRates.GBP).toFixed(2);
+                const eurAmount = (usdAmount * exchangeRates.EUR).toFixed(2);
+
+                gbpSpan.textContent = gbpAmount;
+                eurSpan.textContent = eurAmount;
+                conversionsDiv.style.display = 'block';
+            } else {
+                conversionsDiv.style.display = 'none';
             }
         }
 
